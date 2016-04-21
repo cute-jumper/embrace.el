@@ -175,13 +175,13 @@ doesn't work on many custom pairs?)
 
    The keys that are processed by =evil-surround= are saved in the variable
    =embrace-evil-surround-key=. The default value is:
-   : (?\( ?\[ ?\{ ?\) ?\] ?\} ?\" ?\' ?\b ?\B)
+   : (?\( ?\[ ?\{ ?\) ?\] ?\} ?\" ?\' ?b ?B ?t)
 
    Only these keys are processed by =evil-surround=. This variable is also
    buffer-local. You should change it in the hook:
    : (add-hook 'LaTeX-mode-hook
    :     (lambda ()
-   :        (add-to-list 'embrace-evil-surround-key ?t)))
+   :        (add-to-list 'embrace-evil-surround-key ?o)))
 
 * Contributions
 This package is still in early stage, but it is quite usable right now. More

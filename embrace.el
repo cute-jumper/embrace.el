@@ -31,8 +31,8 @@
 (cl-defstruct embrace-pair-struct
   key left right left-regexp right-regexp read-function)
 
-(defvar embrace-evil-surround-key '(?\( ?\[ ?\{ ?\) ?\] ?\} ?\" ?\' ?\b ?\B)
-  "Keys that should be processed by `evil-surround'.")
+(defvar embrace-evil-surround-key '(?\( ?\[ ?\{ ?\) ?\] ?\} ?\" ?\' ?b ?B ?t)
+  "Keys that should be processed by `evil-surround'")
 (make-variable-buffer-local 'embrace-evil-surround-key)
 
 (defvar embrace-semantic-units-alist '((?w . er/mark-word)
@@ -79,12 +79,11 @@
                   (?\" . ("\"" . "\""))
                   (?\' . ("\'" . "\'"))))
     (embrace-add-pair (car pair) (cadr pair) (cddr pair)))
-  (embrace-add-pair-regexp ?t "<[^>]*?>" "</[^>]*?>" 'embrace-with-tag)
+  (embrace-add-pair-regexp ?t "u]*?>" "u]*?>" 'embrace-with-tag)
   (embrace-add-pair-regexp ?f "\\(\\w\\|\\s_\\)+?(" ")" 'embrace-with-function))
 
-(make-variable-buffer-local 'embrace--pairs-list)
 (embrace--setup-defaults)
-(setq-default embrace--pairs-list embrace--pairs-list)
+(make-variable-buffer-local 'embrace--pairs-list)
 
 (defun embrace-with-tag ()
   (let* ((input (read-string "Tag: "))
@@ -110,7 +109,10 @@
                                 (goto-char (region-end))
                                 (looking-back close)))))
           (er/expand-region 1))
-        (when (not (looking-at open))
+        (when (not (and (looking-at open)
+                        (save-excursion
+                          (goto-char (region-end))
+                          (looking-back close))))
           (setq mark-active nil))
         (when (use-region-p)
           (make-overlay (region-beginning) (region-end) nil nil t))))))
