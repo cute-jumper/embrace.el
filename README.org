@@ -1,10 +1,10 @@
-#+TITLE: embrace
+#+TITLE: embrace.el
 
 Add/Change/Delete pairs based on [[https://github.com/magnars/expand-region.el][expand-region]].
 
 * Overview
 This package is heavily inspired by [[https://github.com/timcharper/evil-surround][evil-surround]] (which is a port of the vim
-plugin [[https://github.com/tpope/vim-surround][surround.vim]]. But instead of using =evil= and its text objects, this
+plugin [[https://github.com/tpope/vim-surround][surround.vim]]). But instead of using =evil= and its text objects, this
 package relies on another excellent package [[https://github.com/magnars/expand-region.el][expand-region]].
 
 For Emacs users who don't like =evil= and thus don't use =evil-surround=,
@@ -28,20 +28,20 @@ better!
    following text in =c-mode= and the cursor position is indicated by ~|~:
    : fo|o
 
-   Press =C-, a w '= to add =''= to the current word:
+   Press @@html:<kbd>@@C-, a w '@@html:</kbd>@@ to add '' to the current word:
    : 'fo|o'
 
-   Press =C-, a q {= to add ={}= to outside of the quotes:
+   Press @@html:<kbd>@@C-, a q {@@html:</kbd>@@ to add {} to outside of the quotes:
    : {'fo|o'}
 
-   Press =C-, c ' "= to change the =''= to =""=:
+   Press @@html:<kbd>@@C-, c ' "@@html:</kbd>@@ to change the '' to "":
    : {"fo|o"}
 
-   Press =C-, c { t=, and then enter the tag =body class="page-body"= to change
-   the ={}= to a tag:
+   Press @@html:<kbd>@@C-, c { t@@html:</kbd>@@, and then enter the tag ~body class="page-body"~ to change
+   the {} to a tag:
    : <body class="page-body">"fo|o"</body>
 
-   Press =C-, c t f=, and enter the function name =bar= to change the tag to a
+   Press @@html:<kbd>@@C-, c t f@@html:</kbd>@@, and enter the function name =bar= to change the tag to a
    function call:
    : bar("fo|o")
 
@@ -131,7 +131,7 @@ better!
   pre-defined text objects, =embrace= can define nearly arbitrary surrounding
   pairs and three core commands always work. On the contratry, you get nearly no
   customization in =evil-surround=: custom pairs don't work in =cs= or =ds= if
-  you don't have a coresponding text object defined (they work in =ys=).
+  you don't have a corresponding text object defined (they work in =ys=).
 
   *TL;DR*: =embrace= is more customizable.
 ** Where= =evil-surround= is better
@@ -143,10 +143,10 @@ better!
    Assume the following text in =LaTeX-mode=:
    : a<foo>{ ba|r }</foo>a
 
-   Using =embrace=, it is impossible to find the tag =<foo> and </foo> since
+   Using =embrace=, it is impossible to find the tag =<foo>= and =</foo>= since
    they are not meaning under =LaTeX-mode= so =expand-region= would not consider
    the tag as a semantic unit. Therefore, =embrace-delete= can not delete the
-   tag (it *does* work if you delete the letter =a= in both ends).
+   tag (it *does* work if you delete the letter =a=s at both ends).
 
    However, if you change the major mode to =html-mode=, =embrace= works since
    now the =<foo>= tag becomes meaningful in current context.
@@ -178,3 +178,8 @@ better!
    : (add-hook 'LaTeX-mode-hook
    :     (lambda ()
    :        (add-to-list 'embrace-evil-surround-key ?t)))
+
+* Contributions
+This package is still in early stage, but it is quite usable right now. More
+functions can be added and the evil integration is not perfect yet.
+Contributions are always welcome!
