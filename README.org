@@ -187,3 +187,8 @@ doesn't work on many custom pairs?)
 This package is still in early stage, but it is quite usable right now. More
 functions can be added and the evil integration is not perfect yet.
 Contributions are always welcome!
+* Related Packages
+  - [[https://github.com/magnars/expand-region.el][expand-region]]
+  - [[https://github.com/timcharper/evil-surround][evil-surround]]
+  - [[https://github.com/magnars/change-inner.el][change-inner]]
+  - [[https://github.com/Fuco1/smartparens][smartparens]]
