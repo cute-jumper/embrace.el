@@ -16,7 +16,12 @@ better!
    There are three commands: =embrace-add=, =embrace-change= and
    =embrace-delete= that can add, change, and delete surrounding pairs
    respectively. You can bind these commands to your favorite key bindings.
-   There is also a dispatch command =embrace-commander=.
+
+   There is also a dispatch command =embrace-commander=. After invoking
+   =embrace-commander=, you can hit:
+   - =a= for =embrace-add=
+   - =c= for =embrace-change=
+   - =d= for =embrace-delete=
 
 ** Example
 
@@ -95,13 +100,6 @@ better!
    to add the surrounding pair, which is the same as =embrace-change= and
    =embrace-delete=.
 
-** =embrace-commander=
-
-   After invoking =embrace-commander=, you can hit:
-   - =a= for =embrace-add=
-   - =c= for =embrace-change=
-   - =d= for =embrace-delete=
-
 * Customization
 ** Adding More Semantic Units
    You can modify the variable =embrace-semantic-units-alist= and note that
@@ -110,6 +108,7 @@ better!
    :     (lambda ()
    :        (add-to-list 'embrace-semantic-units-alist '(?e . er/mark-email))))
 
+** Adding More Surrounding Pairs
    Use the command =embrace-add-pair= to add a pair:
    : (embrace-add-pair key left right)
 
