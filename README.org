@@ -8,9 +8,10 @@ plugin [[https://github.com/tpope/vim-surround][surround.vim]]). But instead of 
 package relies on another excellent package [[https://github.com/magnars/expand-region.el][expand-region]].
 
 For Emacs users who don't like =evil= and thus don't use =evil-surround=,
-=embrace= provides similar commands that can be found in =evil-surround=. For
-=evil-surround= users, =embrace= can make your =evil-surround= commands even
-better!
+=embrace= provides similar commands that can be found in =evil-surround=. =Evil=
+is absolutely *not* required. For =evil-surround= users, =embrace= can make your
+=evil-surround= commands even better! (Have you noticed that =evil-surround=
+doesn't work on many custom pairs?)
 
 * Usage
    There are three commands: =embrace-add=, =embrace-change= and
@@ -42,8 +43,7 @@ better!
    Press @@html:<kbd>@@C-, c ' "@@html:</kbd>@@ to change the '' to "":
    : {"fo|o"}
 
-   Press @@html:<kbd>@@C-, c { t@@html:</kbd>@@, and then enter the tag ~body class="page-body"~ to change
-   the {} to a tag:
+   Press @@html:<kbd>@@C-, c { t@@html:</kbd>@@, and then enter the tag: body class="page-body", to change the {} to a tag:
    : <body class="page-body">"fo|o"</body>
 
    Press @@html:<kbd>@@C-, c t f@@html:</kbd>@@, and enter the function name =bar= to change the tag to a
@@ -51,7 +51,9 @@ better!
    : bar("fo|o")
 
    If you're an =evil-surround= user, you might notice that the last command
-   can't be achieve by =evil-surround=. However, it works in =embrace=.
+   can't be achieve by =evil-surround=. However, it works in =embrace=! And yes,
+   you can find even more examples in which =evil-surround= doesn't work while
+   =embrace= works!
 
 ** =embrace-change= and =embrace-delete=
    These two commands can change and delete the surround pair respectively. For
