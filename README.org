@@ -50,10 +50,13 @@ doesn't work on many custom pairs?)
    function call:
    : bar("fo|o")
 
+   Press @@html:<kbd>@@C-, d f@@html:</kbd>@@ to remove the function call:
+   : "fo|o"
+
    If you're an =evil-surround= user, you might notice that the last command
-   can't be achieve by =evil-surround=. However, it works in =embrace=! And yes,
-   you can find even more examples in which =evil-surround= doesn't work while
-   =embrace= works!
+   can't be achieved by =evil-surround=. However, it works in =embrace=! And
+   yes, you can find even more examples in which =evil-surround= doesn't work
+   while =embrace= works!
 
 ** =embrace-change= and =embrace-delete=
    These two commands can change and delete the surround pair respectively. For
@@ -145,9 +148,9 @@ doesn't work on many custom pairs?)
    : a<foo>{ ba|r }</foo>a
 
    Using =embrace=, it is impossible to find the tag =<foo>= and =</foo>= since
-   they are not meaning under =LaTeX-mode= so =expand-region= would not consider
-   the tag as a semantic unit. Therefore, =embrace-delete= can not delete the
-   tag (it *does* work if you delete the letter =a=s at both ends).
+   they are not meaningfun under =LaTeX-mode= so =expand-region= would not
+   consider the tag as a semantic unit. Therefore, =embrace-delete= can not
+   delete the tag (it *does* work if you delete the letter =a=s at both ends).
 
    However, if you change the major mode to =html-mode=, =embrace= works since
    now the =<foo>= tag becomes meaningful in current context.
