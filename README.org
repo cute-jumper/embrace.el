@@ -105,6 +105,7 @@ doesn't work on many custom pairs?)
    to add the surrounding pair, which is the same as =embrace-change= and
    =embrace-delete=.
 
+
 * Customization
 ** Adding More Semantic Units
    You can modify the variable =embrace-semantic-units-alist= and note that
@@ -125,6 +126,41 @@ doesn't work on many custom pairs?)
    If you want add something like the =t= key for the tag, you can look at the
    function =embrace-add-pair-regexp= in the source code.
 
+   Note that if you're using =embrace-add-pair= to add an existing key, then it
+   will replace the old one.
+
+** Example Settings
+   I recommend binding a convenient key for =embrace-commander=. For example,
+   : (global-set-key (kbd "C-,") #'embrace-commander)
+
+   We have defined several example hook functions that provide additional key
+   bindings which can be used in different major modes. Right now there are
+   hooks for =LaTeX-mode= and =org-mode=:
+
+   =LaTeX-mode=:
+   | Key | Left        | Right |
+   |-----+-------------+-------|
+   | =   | \verb \vert | \vert |
+   | ~   | \texttt{    | }     |
+   | /   | \emph{      | }     |
+   | *   | \textbf{    | }     |
+
+   =org-mode=:
+   | Key | Left | Right |
+   |-----+------+-------|
+   | =   | =    | =     |
+   | ~   | ~    | ~     |
+   | /   | /    | /     |
+   | *   | *    | *     |
+   | _   | _    | _     |
+   | +   | +    | +     |
+
+   To use them:
+   : (add-hook 'LaTeX-mode-hook 'embrace-LaTeX-mode-hook)
+   : (add-hook 'org-mode-hook 'embrace-org-mode-hook)
+
+   Welcome to add some settings for more major modes.
+
 * For =evil-surround= Users
 ** Where =embrace= is better
   From the previous example, you can see that =embrace= actually replicates all
@@ -138,7 +174,7 @@ doesn't work on many custom pairs?)
   you don't have a corresponding text object defined (they work in =ys=).
 
   *TL;DR*: =embrace= is more customizable.
-** Where= =evil-surround= is better
+** Where =evil-surround= is better
    =expand-region= works on semantic units, which can be different in different
    major modes, which causes =embrace= to have different behaviors in differnt
    major modes. However, =evil-surround= is based on text objects. You can
@@ -177,11 +213,16 @@ doesn't work on many custom pairs?)
    =embrace-evil-surround-key=. The default value is:
    : (?\( ?\[ ?\{ ?\) ?\] ?\} ?\" ?\' ?b ?B ?t)
 
-   Only these keys are processed by =evil-surround=. This variable is also
-   buffer-local. You should change it in the hook:
+   Note that this variable is also buffer-local. You should change it in the
+   hook:
    : (add-hook 'LaTeX-mode-hook
    :     (lambda ()
    :        (add-to-list 'embrace-evil-surround-key ?o)))
+
+   Only these keys saved in the variable are processed by =evil-surround=, and
+   all the other keys will be processed by =embrace=. You can customize
+   =embrace= in the way described in the previous *Customization* section to add
+   support for additional pairs.
 
 * Contributions
 This package is still in early stage, but it is quite usable right now. More

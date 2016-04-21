@@ -566,5 +566,27 @@
     (advice-remove 'evil-surround-change 'embrace-evil-surround-change)
     (advice-remove 'evil-surround-delete 'embrace-evil-surround-delete)))
 
+
+;; -------- ;;
+;; Bindings ;;
+;; -------- ;;
+;;;###autoload
+(defun embrace-LaTeX-mode-hook ()
+  (dolist (lst '((?= "\\verb|" . "|")
+                 (?~ "\\texttt{" . "}")
+                 (?/ "\\emph{" . "}")
+                 (?* "\\textbf{" . "}")))
+    (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
+
+;;;###autoload
+(defun embrace-org-mode-hook ()
+  (dolist (lst '((?= "=" . "=")
+                 (?~ "~" . "~")
+                 (?/ "/" . "/")
+                 (?* "*" . "*")
+                 (?_ "_" . "_")
+                 (?+ "+" . "+")))
+    (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
+
 (provide 'embrace)
 ;;; embrace.el ends here
