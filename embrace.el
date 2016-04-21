@@ -1,8 +1,9 @@
-;;; embrace.el --- Emacs version of surround.vim based on `expand-region'  -*- lexical-binding: t; -*-
+;;; embrace.el --- Add/Change/Delete pairs based on `expand-region'  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2016  Junpeng Qiu
 
 ;; Author: Junpeng Qiu <qjpchmail@gmail.com>
+;; Package-Requires: ((emacs "24.4") (expand-region "0.10.0") (cl-lib "0.5"))
 ;; Keywords: extensions
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -237,11 +238,11 @@
               (when inner (delete-overlay inner))))
         (setq overlay (embrace--delete char t))
         (let ((key (read-char)))
-          (if (member char embrace-evil-surround-key)
+          (if (member key embrace-evil-surround-key)
               (evil-surround-region (overlay-start overlay)
                                     (overlay-end overlay)
                                     nil (if (evil-surround-valid-char-p key) key char))
-            (embrace--insert char overlay))
+            (embrace--insert key overlay))
           (when overlay (delete-overlay overlay))))))))
 
 ;;;###autoload
