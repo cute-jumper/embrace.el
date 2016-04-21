@@ -25,6 +25,7 @@
 ;;; Code:
 
 (require 'expand-region)
+(require 'cl-lib)
 
 (cl-defstruct embrace-pair-struct
   key left right left-regexp right-regexp read-function)
@@ -52,7 +53,7 @@
                           :key key
                           :left left
                           :right right
-                          :left-regexp (regexp-quote (s-trim) left)
+                          :left-regexp (regexp-quote left)
                           :right-regexp (regexp-quote right)))))
 
 (defun embrace-add-pair-regexp (key left-regexp right-regexp read-function)
@@ -64,17 +65,21 @@
                           :left-regexp left-regexp
                           :right-regexp right-regexp))))
 
-(dolist (pair '((?\( . ("(" . ")"))
-                (?\) . ("( " . " )"))
-                (?\{ . ("{" . "}"))
-                (?\} . ("{ " . " }"))
-                (?\[ . ("[" . "]"))
-                (?\] . ("[ " . " ]"))
-                (?> . ("<" . ">"))))
-  (embrace-add-pair (car pair) (cadr pair) (cddr pair)))
+(defun embrace--setup-defaults ()
+  (dolist (pair '((?\( . ("(" . ")"))
+                  (?\) . ("( " . " )"))
+                  (?\{ . ("{" . "}"))
+                  (?\} . ("{ " . " }"))
+                  (?\[ . ("[" . "]"))
+                  (?\] . ("[ " . " ]"))
+                  (?> . ("<" . ">"))))
+    (embrace-add-pair (car pair) (cadr pair) (cddr pair)))
+  (embrace-add-pair-regexp ?t "<[^>]*?>" "</[^>]*?>" 'embrace-with-tag)
+  (embrace-add-pair-regexp ?f "\\(\\w\\|\\s_\\)+?(" ")" 'embrace-with-function))
 
-(embrace-add-pair-regexp ?t "<[^>]*?>" "</[^>]*?>" 'embrace-with-tag)
-(embrace-add-pair-regexp ?f "\\(\\w\\|\\s_\\)+?(" ")" 'embrace-with-function)
+(make-variable-buffer-local 'embrace--pairs-list)
+(embrace--setup-defaults)
+(setq-default embrace--pairs-list embrace--pairs-list)
 
 (defun embrace-with-tag ()
   (let* ((input (read-string "Tag: "))
@@ -89,7 +94,7 @@
     (cons (format "%s(" (or fname "")) ")")))
 
 (defun embrace--get-region-overlay (open close)
-  (flet ((message (&rest args) nil))
+  (cl-letf (((symbol-function 'message) (lambda (&rest args) nil)))
     (let ((expand-region-fast-keys-enabled nil))
       (save-excursion
         (when (looking-at open)
@@ -127,31 +132,27 @@
       (delete-overlay overlay))))
 
 (defun embrace--delete (char &optional change-p)
-  (let ((struct (assoc-default char embrace--pairs-list))
-        (open (embrace-pair-struct-left-regexp struct))
-        (close (embrace-pair-struct-right-regexp struct))
-        (overlay (embrace--get-region-overlay open close)))
+  (let* ((struct (assoc-default char embrace--pairs-list))
+         (open (embrace-pair-struct-left-regexp struct))
+         (close (embrace-pair-struct-right-regexp struct))
+         (overlay (embrace--get-region-overlay open close)))
     (unless overlay
       (error "No such a pair found"))
     (unwind-protect
         (progn
-          (save-restriction
-            (save-excursion
-              (narrow-to-region (overlay-start overlay) (overlay-end overlay))
-              (goto-char (point-min))
-              (when (looking-at open)
-                (delete-char (string-width (match-string 0))))
-              (goto-char (point-max))
-              (when (looking-back close)
-                (backward-delete-char (string-width (match-string 0)))))))
-      (if change-p
-          overlay
-        (delete-overlay overlay)))))
+          (save-excursion
+            (goto-char (overlay-start overlay))
+            (when (looking-at open)
+              (delete-char (string-width (match-string 0))))
+            (goto-char (overlay-end overlay))
+            (when (looking-back close)
+              (backward-delete-char (string-width (match-string 0)))))
+          (when change-p overlay))
+      (unless change-p (delete-overlay overlay)))))
 
 (defun embrace--internal (change-p)
   (let* ((char (read-char "Delete pair: "))
-         struct open close overlay)
-    (setq overlay (embrace--delete char))
+         (overlay (embrace--delete char change-p)))
     (and change-p
          (overlayp overlay)
          (embrace--insert (read-char "Insert pair: ") overlay))))
@@ -173,11 +174,11 @@
                                   embrace-semantic-units-alist))
         overlay)
     (unless (fboundp mark-func)
-      (error "No such an object"))
+      (error "No such a semantic unit"))
     (save-excursion
       (funcall mark-func)
       (setq overlay (make-overlay (region-beginning) (region-end) nil nil t))
-      (embrace--insert overlay)
+      (embrace--insert (read-char "Add pair: ") overlay)
       (delete-overlay overlay))))
 
 ;;;###autoload
@@ -190,7 +191,9 @@
      ((eq char ?c)
       (call-interactively 'embrace-change))
      ((eq char ?d)
-      (call-interactively 'embrace-delete)))))
+      (call-interactively 'embrace-delete))
+     (t
+      (error "Unknow key")))))
 
 ;;; `evil-surround' integration
 (defun embrace-evil-surround-delete (char &optional outer inner)
@@ -241,8 +244,19 @@
             (embrace--insert char overlay))
           (when overlay (delete-overlay overlay))))))))
 
-(advice-add 'evil-surround-change :override 'embrace-evil-surround-change)
-(define-key qjp-mode-map (kbd "C-,") #'embrace-change)
+;;;###autoload
+(defun embrace-enable-evil-surround-integration ()
+  (interactive)
+  (when (require 'evil-surround nil t)
+    (advice-add 'evil-surround-change :override 'embrace-evil-surround-change)
+    (advice-add 'evil-surround-delete :override 'embrace-evil-surround-delete)))
+
+;;;###autoload
+(defun embrace-disable-evil-surround-integration ()
+  (interactive)
+  (when (require 'evil-surround nil t)
+    (advice-remove 'evil-surround-change 'embrace-evil-surround-change)
+    (advice-remove 'evil-surround-delete 'embrace-evil-surround-delete)))
 
 (provide 'embrace)
 ;;; embrace.el ends here
