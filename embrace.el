@@ -40,11 +40,13 @@
 ;; 3 Customization
 ;; .. 3.1 Adding More Semantic Units
 ;; .. 3.2 Adding More Surrounding Pairs
+;; .. 3.3 Example Settings
 ;; 4 For `evil-surround' Users
 ;; .. 4.1 Where `embrace' is better
-;; .. 4.2 Where= `evil-surround' is better
+;; .. 4.2 Where `evil-surround' is better
 ;; .. 4.3 Why not use together?
 ;; 5 Contributions
+;; 6 Related Packages
 
 
 ;; Add/Change/Delete pairs based on [expand-region].
@@ -231,6 +233,47 @@
 ;;   If you want add something like the `t' key for the tag, you can look
 ;;   at the function `embrace-add-pair-regexp' in the source code.
 
+;;   Note that if you're using `embrace-add-pair' to add an existing key,
+;;   then it will replace the old one.
+
+
+;; 3.3 Example Settings
+;; ~~~~~~~~~~~~~~~~~~~~
+
+;;   I recommend binding a convenient key for `embrace-commander'. For
+;;   example,
+;;   ,----
+;;   | (global-set-key (kbd "C-,") #'embrace-commander)
+;;   `----
+
+;;   We have defined several example hook functions that provide additional
+;;   key bindings which can be used in different major modes. Right now
+;;   there are hooks for `LaTeX-mode' and `org-mode':
+
+;;   `LaTeX-mode':
+;;    Key  Left      Right
+;;   ----------------------
+;;    =    \verb |   |
+;;    ~    \texttt{  }
+;;    *    \textbf{  }
+
+;;   `org-mode':
+;;    Key  Left  Right
+;;   ------------------
+;;    =    =     =
+;;    ~    ~     ~
+;;    *    *     *
+;;    _    _     _
+;;    +    +     +
+
+;;   To use them:
+;;   ,----
+;;   | (add-hook 'LaTeX-mode-hook 'embrace-LaTeX-mode-hook)
+;;   | (add-hook 'org-mode-hook 'embrace-org-mode-hook)
+;;   `----
+
+;;   Welcome to add some settings for more major modes.
+
 
 ;; 4 For `evil-surround' Users
 ;; ===========================
@@ -253,8 +296,8 @@
 ;;   *TL;DR*: `embrace' is more customizable.
 
 
-;; 4.2 Where= `evil-surround' is better
-;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;; 4.2 Where `evil-surround' is better
+;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;;   `expand-region' works on semantic units, which can be different in
 ;;   different major modes, which causes `embrace' to have different
@@ -307,13 +350,18 @@
 ;;   | (?\( ?\[ ?\{ ?\) ?\] ?\} ?\" ?\' ?b ?B ?t)
 ;;   `----
 
-;;   Only these keys are processed by `evil-surround'. This variable is
-;;   also buffer-local. You should change it in the hook:
+;;   Note that this variable is also buffer-local. You should change it in
+;;   the hook:
 ;;   ,----
 ;;   | (add-hook 'LaTeX-mode-hook
 ;;   |     (lambda ()
 ;;   |        (add-to-list 'embrace-evil-surround-key ?o)))
 ;;   `----
+
+;;   Only these keys saved in the variable are processed by
+;;   `evil-surround', and all the other keys will be processed by
+;;   `embrace'. You can customize `embrace' in the way described in the
+;;   previous *Customization* section to add support for additional pairs.
 
 
 ;; 5 Contributions
@@ -323,6 +371,23 @@
 ;;   now. More functions can be added and the evil integration is not
 ;;   perfect yet. Contributions are always welcome!
 
+
+;; 6 Related Packages
+;; ==================
+
+;;   - [expand-region]
+;;   - [evil-surround]
+;;   - [change-inner]
+;;   - [smartparens]
+
+
+;; [expand-region] https://github.com/magnars/expand-region.el
+
+;; [evil-surround] https://github.com/timcharper/evil-surround
+
+;; [change-inner] https://github.com/magnars/change-inner.el
+
+;; [smartparens] https://github.com/Fuco1/smartparens
 
 ;;; Code:
 
