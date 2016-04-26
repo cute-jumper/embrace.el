@@ -397,10 +397,6 @@
 (cl-defstruct embrace-pair-struct
   key left right left-regexp right-regexp read-function)
 
-(defvar embrace-evil-surround-key '(?\( ?\[ ?\{ ?\) ?\] ?\} ?\" ?\' ?b ?B ?t)
-  "Keys that should be processed by `evil-surround'")
-(make-variable-buffer-local 'embrace-evil-surround-key)
-
 (defvar embrace-semantic-units-alist '((?w . er/mark-word)
                                        (?s . er/mark-symbol)
                                        (?d . er/mark-defun)
@@ -570,70 +566,6 @@
       (call-interactively 'embrace-delete))
      (t
       (error "Unknow command")))))
-
-;;; `evil-surround' integration
-(defun embrace-evil-surround-delete (char &optional outer inner)
-  (interactive "c")
-  (cond
-   ((and outer inner)
-    (delete-region (overlay-start outer) (overlay-start inner))
-    (delete-region (overlay-end inner) (overlay-end outer))
-    (goto-char (overlay-start outer)))
-   (t
-    (if (member char embrace-evil-surround-key)
-        (let* ((outer (evil-surround-outer-overlay char))
-               (inner (evil-surround-inner-overlay char)))
-          (unwind-protect
-              (when (and outer inner)
-                (evil-surround-delete char outer inner))
-            (when outer (delete-overlay outer))
-            (when inner (delete-overlay inner))))
-      (embrace--delete char)))))
-
-(defun embrace-evil-surround-change (char &optional outer inner)
-  (interactive "c")
-  (let (overlay)
-    (cond
-     ((and outer inner)
-      (evil-surround-delete char outer inner)
-      (let ((key (read-char)))
-        (if (member key embrace-evil-surround-key)
-            (evil-surround-region (overlay-start outer)
-                                  (overlay-end outer)
-                                  nil (if (evil-surround-valid-char-p key) key char))
-          (embrace--insert key (copy-overlay outer)))))
-     (t
-      (if (member char embrace-evil-surround-key)
-          (let* ((outer (evil-surround-outer-overlay char))
-                 (inner (evil-surround-inner-overlay char)))
-            (unwind-protect
-                (when (and outer inner)
-                  (evil-surround-change char outer inner))
-              (when outer (delete-overlay outer))
-              (when inner (delete-overlay inner))))
-        (setq overlay (embrace--delete char t))
-        (let ((key (read-char)))
-          (if (member key embrace-evil-surround-key)
-              (evil-surround-region (overlay-start overlay)
-                                    (overlay-end overlay)
-                                    nil (if (evil-surround-valid-char-p key) key char))
-            (embrace--insert key overlay))
-          (when overlay (delete-overlay overlay))))))))
-
-;;;###autoload
-(defun embrace-enable-evil-surround-integration ()
-  (interactive)
-  (when (require 'evil-surround nil t)
-    (advice-add 'evil-surround-change :override 'embrace-evil-surround-change)
-    (advice-add 'evil-surround-delete :override 'embrace-evil-surround-delete)))
-
-;;;###autoload
-(defun embrace-disable-evil-surround-integration ()
-  (interactive)
-  (when (require 'evil-surround nil t)
-    (advice-remove 'evil-surround-change 'embrace-evil-surround-change)
-    (advice-remove 'evil-surround-delete 'embrace-evil-surround-delete)))
-
 
 ;; -------- ;;
 ;; Bindings ;;

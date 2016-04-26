@@ -2,6 +2,8 @@
 
 Add/Change/Delete pairs based on [[https://github.com/magnars/expand-region.el][expand-region]].
 
+For =evil-surround= integration, see [[https://github.com/cute-jumper/evil-embrace.el][evil-embrace]].
+
 * Overview
 This package is heavily inspired by [[https://github.com/timcharper/evil-surround][evil-surround]] (which is a port of the vim
 plugin [[https://github.com/tpope/vim-surround][surround.vim]]). But instead of using =evil= and its text objects, this
@@ -198,37 +200,15 @@ doesn't work on many custom pairs?)
    meaningful in the current context. From this point of view, =embrace='s
    behavior makes more sense.
 ** Why not use together?
-   Sure! You can make =embrace= and =evil-surround= work together.
-
-   Use the following command to enable the integration:
-   : (embrace-enable-evil-surround-integration)
-
-   And use =embrace-disable-evil-surround-integration= to disable.
-
-   The idea is that =evil-surround= works great if there are already text
-   objects defined. So when users press a key that can be mapped to a text
-   object, it is handled by =evil-surround=. Otherwise, let =embrace= handle it.
-
-   The keys that are processed by =evil-surround= are saved in the variable
-   =embrace-evil-surround-key=. The default value is:
-   : (?\( ?\[ ?\{ ?\) ?\] ?\} ?\" ?\' ?b ?B ?t)
-
-   Note that this variable is also buffer-local. You should change it in the
-   hook:
-   : (add-hook 'LaTeX-mode-hook
-   :     (lambda ()
-   :        (add-to-list 'embrace-evil-surround-key ?o)))
-
-   Only these keys saved in the variable are processed by =evil-surround=, and
-   all the other keys will be processed by =embrace=. You can customize
-   =embrace= in the way described in the previous *Customization* section to add
-   support for additional pairs.
+   Sure! You can make =embrace= and =evil-surround= work together. Look at
+   [[https://github.com/cute-jumper/evil-embrace.el][evil-embrace]]!
 
 * Contributions
 This package is still in early stage, but it is quite usable right now. More
 functions can be added and the evil integration is not perfect yet.
 Contributions are always welcome!
 * Related Packages
+  - [[https://github.com/cute-jumper/evil-embrace.el][evil-embrace]]
   - [[https://github.com/magnars/expand-region.el][expand-region]]
   - [[https://github.com/timcharper/evil-surround][evil-surround]]
   - [[https://github.com/magnars/change-inner.el][change-inner]]
