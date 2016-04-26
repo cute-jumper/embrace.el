@@ -543,18 +543,16 @@
 ;;;###autoload
 (defun embrace-add ()
   (interactive)
-  (let (mark-func 
+  (let (mark-func
         overlay)
     (save-excursion
       ;; only ask for semantic unit if region isn't already set
-      (cond ((not (use-region-p))
-             (setq mark-func (assoc-default (read-char "Semantic unit: ")
-                                            embrace-semantic-units-alist))
-             (unless (fboundp mark-func)
-               (error "No such a semantic unit"))
-             (funcall mark-func)
-             ))
-
+      (unless (use-region-p)
+        (setq mark-func (assoc-default (read-char "Semantic unit: ")
+                                       embrace-semantic-units-alist))
+        (unless (fboundp mark-func)
+          (error "No such a semantic unit"))
+        (funcall mark-func))
       (setq overlay (make-overlay (region-beginning) (region-end) nil nil t))
       (embrace--insert (read-char "Add pair: ") overlay)
       (delete-overlay overlay))))
