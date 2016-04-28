@@ -142,24 +142,45 @@ doesn't work on many custom pairs?)
    =LaTeX-mode=:
    | Key | Left        | Right |
    |-----+-------------+-------|
-   | =   | \verb \vert | \vert |
+   | =   | =\verb|=    | \vert |
    | ~   | \texttt{    | }     |
    | /   | \emph{      | }     |
    | *   | \textbf{    | }     |
 
    =org-mode=:
-   | Key | Left | Right |
-   |-----+------+-------|
-   | =   | =    | =     |
-   | ~   | ~    | ~     |
-   | /   | /    | /     |
-   | *   | *    | *     |
-   | _   | _    | _     |
-   | +   | +    | +     |
+   | Key | Left             | Right             |
+   |-----+------------------+-------------------|
+   | =   | =                | =                 |
+   | ~   | ~                | ~                 |
+   | /   | /                | /                 |
+   | *   | *                | *                 |
+   | _   | _                | _                 |
+   | +   | +                | +                 |
+   | k   | =@@html:<kbd>@@= | =@@html:</kbd>@@= |
 
    To use them:
    : (add-hook 'LaTeX-mode-hook 'embrace-LaTeX-mode-hook)
    : (add-hook 'org-mode-hook 'embrace-org-mode-hook)
+
+   The code for the two hooks above (which are defined in =embrace.el=):
+   : (defun embrace-LaTeX-mode-hook ()
+   :   (dolist (lst '((?= "\\verb|" . "|")
+   :                  (?~ "\\texttt{" . "}")
+   :                  (?/ "\\emph{" . "}")
+   :                  (?* "\\textbf{" . "}")))
+   :     (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
+   :
+   : (defun embrace-org-mode-hook ()
+   :   (dolist (lst '((?= "=" . "=")
+   :                  (?~ "~" . "~")
+   :                  (?/ "/" . "/")
+   :                  (?* "*" . "*")
+   :                  (?_ "_" . "_")
+   :                  (?+ "+" . "+")
+   :                  (?k "@@html:<kbd>@@" . "@@html:</kbd>@@")))
+   :     (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
+
+   You can define and use your own hook function similar to the code above.
 
    Welcome to add some settings for more major modes.
 

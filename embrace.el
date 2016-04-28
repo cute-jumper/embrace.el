@@ -449,7 +449,7 @@
 
 (defun embrace-with-tag ()
   (let* ((input (read-string "Tag: "))
-         (match (string-match "\\([0-9a-z-]+\\)\\(.*?\\)[>]*$" input))
+         (_ (string-match "\\([0-9a-z-]+\\)\\(.*?\\)[>]*$" input))
          (tag  (match-string 1 input))
          (rest (match-string 2 input)))
     (cons (format "<%s%s>" (or tag "") (or rest ""))
@@ -460,7 +460,7 @@
     (cons (format "%s(" (or fname "")) ")")))
 
 (defun embrace--get-region-overlay (open close)
-  (cl-letf (((symbol-function 'message) (lambda (&rest args) nil)))
+  (cl-letf (((symbol-function 'message) (lambda (&rest _) nil)))
     (let ((expand-region-fast-keys-enabled nil))
       (save-excursion
         (when (looking-at open)
@@ -585,7 +585,8 @@
                  (?/ "/" . "/")
                  (?* "*" . "*")
                  (?_ "_" . "_")
-                 (?+ "+" . "+")))
+                 (?+ "+" . "+")
+                 (?k "@@html:<kbd>@@" . "@@html:</kbd>@@")))
     (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
 
 (provide 'embrace)
