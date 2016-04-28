@@ -169,7 +169,6 @@ doesn't work on many custom pairs?)
    :                  (?/ "\\emph{" . "}")
    :                  (?* "\\textbf{" . "}")))
    :     (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
-   :
    : (defun embrace-org-mode-hook ()
    :   (dolist (lst '((?= "=" . "=")
    :                  (?~ "~" . "~")
