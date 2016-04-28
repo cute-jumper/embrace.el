@@ -519,7 +519,7 @@
           (when change-p overlay))
       (unless change-p (delete-overlay overlay)))))
 
-(defun embrace--internal (change-p)
+(defun embrace--change-internal (change-p)
   (let* ((char (read-char "Delete pair: "))
          (overlay (embrace--delete char change-p)))
     (and change-p
@@ -529,18 +529,22 @@
 ;;;###autoload
 (defun embrace-delete ()
   (interactive)
-  (embrace--internal nil))
+  (embrace--change-internal nil))
 
 ;;;###autoload
 (defun embrace-change ()
   (interactive)
-  (embrace--internal t))
+  (embrace--change-internal t))
+
+(defun embrace--add-internal (beg end char)
+  (let ((overlay (make-overlay beg end nil nil t)))
+    (embrace--insert char overlay)
+    (delete-overlay overlay)))
 
 ;;;###autoload
 (defun embrace-add ()
   (interactive)
-  (let (mark-func
-        overlay)
+  (let (mark-func)
     (save-excursion
       ;; only ask for semantic unit if region isn't already set
       (unless (use-region-p)
@@ -549,9 +553,8 @@
         (unless (fboundp mark-func)
           (error "No such a semantic unit"))
         (funcall mark-func))
-      (setq overlay (make-overlay (region-beginning) (region-end) nil nil t))
-      (embrace--insert (read-char "Add pair: ") overlay)
-      (delete-overlay overlay))))
+      (embrace--add-internal (region-beginning) (region-end)
+                             (read-char "Add pair: ")))))
 
 ;;;###autoload
 (defun embrace-commander ()
