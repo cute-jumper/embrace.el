@@ -397,17 +397,57 @@
 (cl-defstruct embrace-pair-struct
   key left right left-regexp right-regexp read-function)
 
-(defvar embrace-semantic-units-alist '((?w . er/mark-word)
-                                       (?s . er/mark-symbol)
-                                       (?d . er/mark-defun)
-                                       (?P . er/mark-inside-pairs)
-                                       (?p . er/mark-outside-pairs)
-                                       (?Q . er/mark-inside-quotes)
-                                       (?q . er/mark-outside-quotes)
-                                       (?. . er/mark-sentence)
-                                       (?h . er/mark-paragraph))
+(defvar embrace-semantic-units-alist '((?w . (er/mark-word . "word"))
+                                       (?s . (er/mark-symbol . "symbol"))
+                                       (?d . (er/mark-defun . "defun"))
+                                       (?P . (er/mark-inside-pairs . "inside pairs"))
+                                       (?p . (er/mark-outside-pairs . "outside pairs"))
+                                       (?Q . (er/mark-inside-quotes . "inside quotes"))
+                                       (?q . (er/mark-outside-quotes . "outside quotes"))
+                                       (?. . (er/mark-sentence . "sentence"))
+                                       (?h . (er/mark-paragraph . "paragraph")))
   "Key to mark function mapping.")
 (make-variable-buffer-local 'embrace-semantic-units-alist)
+
+(defvar embrace--help-buffer-name "*embrace-help*")
+(defvar embrace--help-buffer nil)
+(defun embrace--setup-help-buffer ()
+  (or (buffer-live-p embrace--help-buffer)
+      (with-current-buffer
+          (setq embrace--help-buffer
+                (get-buffer-create embrace--help-buffer-name))
+        (let (message-log-max)
+          (toggle-truncate-lines 1)
+          (message ""))
+        (setq-local cursor-type nil)
+        (setq-local cursor-in-non-selected-windows nil)
+        (setq-local mode-line-format nil)
+        (setq-local word-wrap nil)
+        (setq-local show-trailing-whitespace nil))))
+
+(defun embrace--hide-help-buffer ()
+  (and (buffer-live-p embrace--help-buffer)
+       (quit-windows-on embrace--help-buffer)))
+
+(defun embrace--show-help-buffer ()
+  (embrace--setup-help-buffer)
+  (display-buffer-in-major-side-window
+   embrace--help-buffer 'bottom 0
+   '((window-width . (lambda (w) (fit-window-to-buffer w nil 1)))
+     (window-height . (lambda (w) (fit-window-to-buffer w nil 1))))))
+
+;; (defun embrace--get-max-width ()
+;;   (let ((char-width (frame-char-width)))
+;;     (- (window-total-width (frame-root-window))
+;;        ())))
+
+;; (defun embrace--insert-help-semantic-units ()
+;;   (dolist (pair embrace-semantic-units-alist)
+;;     ()))
+
+;; (defun embrace--insert-help-alist (alist)
+;;   (dolist (pair alist)
+;;     ))
 
 (defun embrace-exit-select-mode-and-execute ()
   (interactive)
