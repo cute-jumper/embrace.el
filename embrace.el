@@ -409,6 +409,43 @@
   "Key to mark function mapping.")
 (make-variable-buffer-local 'embrace-semantic-units-alist)
 
+(defun embrace-exit-select-mode-and-execute ()
+  (interactive)
+  (embrace-select-mode -1)
+  (embrace--add-internal (region-beginning) (region-end)
+                         (aref (this-command-keys) 0)))
+
+(defun embrace-select-mode-post-command-hook ()
+  (which-key--show-keymap nil embrace-select-mode-map)
+  (setq deactivate-mark nil))
+
+(defun embrace--silent-expand-region (arg)
+  (interactive "p")
+  (cl-letf (((symbol-function 'message) (lambda (&rest _) nil)))
+    (let ((expand-region-fast-keys-enabled))
+      (er/expand-region arg))))
+
+(defvar embrace-select-mode-map
+  (let ((map (make-sparse-keymap)))
+    (dolist (pair embrace-semantic-units-alist)
+      (define-key map (format "%c" (car pair)) (cdr pair)))
+    (dolist (num (number-sequence 1 9))
+      (define-key map (format "%d" num) 'digit-argument))
+    (define-key map "=" 'embrace--silent-expand-region)
+    (define-key map "-" 'er/contract-region)
+    (define-key map (kbd "C-g") 'embrace-select-mode)
+    (define-key map [t] 'embrace-exit-select-mode-and-execute)
+    map))
+
+(define-minor-mode embrace-select-mode
+  "Mode to select semantic units."
+  :lighter "Select"
+  (if embrace-select-mode
+      (progn
+        (add-hook 'post-command-hook 'embrace-select-mode-post-command-hook))
+    (remove-hook 'post-command-hook 'embrace-select-mode-post-command-hook)
+    (setq mark-active nil)))
+
 (defvar embrace--pairs-list nil)
 
 (defun embrace-add-pair (key left right)
@@ -556,6 +593,10 @@
         (funcall mark-func))
       (embrace--add-internal (region-beginning) (region-end)
                              (read-char "Add pair: ")))))
+
+(defun embrace-add-1 ()
+  (interactive)
+  (embrace-select-mode))
 
 ;;;###autoload
 (defun embrace-commander ()
