@@ -460,7 +460,7 @@
   (let ((fname (read-string "Function: ")))
     (cons (format "%s(" (or fname "")) ")")))
 
-(defun embrace--get-region-overlay (open close)
+(defun embrace--expand-region-research (open close)
   (cl-letf (((symbol-function 'message) (lambda (&rest _) nil)))
     (let ((expand-region-fast-keys-enabled nil))
       (save-excursion
@@ -478,7 +478,22 @@
                           (looking-back close))))
           (setq mark-active nil))
         (when (use-region-p)
-          (make-overlay (region-beginning) (region-end) nil nil t))))))
+          (cons (region-beginning) (region-end)))))))
+
+(defun embrace--fallback-re-search (open close)
+  (let ((start (point)))
+    (save-excursion
+      (when (re-search-backward open nil t)
+        (push-mark)
+        (goto-char start)
+        (when (re-search-forward close nil t)
+          (cons (mark) (point)))))))
+
+(defun embrace--get-region-overlay (open close)
+  (let ((bounds (or (embrace--expand-region-research open close)
+                    (embrace--fallback-re-search open close))))
+    (when bounds
+      (make-overlay (car bounds) (cdr bounds) nil nil t))))
 
 (defun embrace--insert (char overlay)
   (let* ((struct (assoc-default char embrace--pairs-list))
@@ -582,6 +597,25 @@
                  (?* "\\textbf{" . "}")))
     (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
 
+(defun embrace-with-org-block ()
+  (let ((block-type (completing-read
+                     "Org block type: "
+                     '(ascii beamer center comment example html
+                             justifyleft justifyright latex quote
+                             src texinfo verse))))
+    (if (string= block-type "src")
+        (cons
+         (concat (format "#+BEGIN_SRC %s"
+                         (completing-read "Language: "
+                                          (mapcar #'car org-babel-load-languages)))
+                 (let ((args (read-string "Arguments: ")))
+                   (unless (string= args "")
+                     (format " %s" args))))
+         "#+END_SRC")
+      (setq block-type (upcase block-type))
+      (cons (format "#+BEGIN_%s" block-type)
+            (format "#+END_%s" block-type)))))
+
 ;;;###autoload
 (defun embrace-org-mode-hook ()
   (dolist (lst '((?= "=" . "=")
@@ -591,7 +625,8 @@
                  (?_ "_" . "_")
                  (?+ "+" . "+")
                  (?k "@@html:<kbd>@@" . "@@html:</kbd>@@")))
-    (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
+    (embrace-add-pair (car lst) (cadr lst) (cddr lst)))
+  (embrace-add-pair-regexp ?l "#\\+BEGIN_.*" "#\\+END_.*" 'embrace-with-org-block))
 
 (provide 'embrace)
 ;;; embrace.el ends here
