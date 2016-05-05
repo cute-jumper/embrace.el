@@ -395,7 +395,7 @@
 (require 'cl-lib)
 
 (cl-defstruct embrace-pair-struct
-  key left right left-regexp right-regexp read-function)
+  key left right left-regexp right-regexp read-function auto-newline)
 
 (defvar embrace-semantic-units-alist '((?w . er/mark-word)
                                        (?s . er/mark-symbol)
@@ -421,14 +421,16 @@
                           :left-regexp (regexp-quote left)
                           :right-regexp (regexp-quote right)))))
 
-(defun embrace-add-pair-regexp (key left-regexp right-regexp read-function)
+(defun embrace-add-pair-regexp
+    (key left-regexp right-regexp read-function &optional auto-newline)
   (assq-delete-all key embrace--pairs-list)
   (add-to-list 'embrace--pairs-list
                (cons key (make-embrace-pair-struct
                           :key key
                           :read-function read-function
                           :left-regexp left-regexp
-                          :right-regexp right-regexp))))
+                          :right-regexp right-regexp
+                          :auto-newline auto-newline))))
 
 (defun embrace--setup-defaults ()
   (dolist (pair '((?\( . ("(" . ")"))
@@ -497,6 +499,8 @@
 
 (defun embrace--insert (char overlay)
   (let* ((struct (assoc-default char embrace--pairs-list))
+         (auto-newline (and struct
+                            (embrace-pair-struct-auto-newline struct)))
          open close)
     (if struct
         (if (functionp (embrace-pair-struct-read-function struct))
@@ -512,7 +516,13 @@
         (save-excursion
           (goto-char (overlay-start overlay))
           (insert open)
+          (and auto-newline
+               (not (looking-at-p "[[:space:]]*\n"))
+               (insert "\n"))
           (goto-char (overlay-end overlay))
+          (and auto-newline
+               (not (looking-back "\n[[:space:]]*"))
+               (insert "\n"))
           (insert close))
       (delete-overlay overlay))))
 
@@ -626,7 +636,7 @@
                  (?+ "+" . "+")
                  (?k "@@html:<kbd>@@" . "@@html:</kbd>@@")))
     (embrace-add-pair (car lst) (cadr lst) (cddr lst)))
-  (embrace-add-pair-regexp ?l "#\\+BEGIN_.*" "#\\+END_.*" 'embrace-with-org-block))
+  (embrace-add-pair-regexp ?l "#\\+BEGIN_.*" "#\\+END_.*" 'embrace-with-org-block t))
 
 (provide 'embrace)
 ;;; embrace.el ends here
