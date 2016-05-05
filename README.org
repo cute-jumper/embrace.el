@@ -60,6 +60,8 @@ doesn't work on many custom pairs?)
    yes, you can find even more examples in which =evil-surround= doesn't work
    while =embrace= works!
 
+   You can also take a look at the screencasts later in the README.
+
 ** =embrace-change= and =embrace-delete=
    These two commands can change and delete the surround pair respectively. For
    =evil-surround= users, =embrace-change= is similar to =cs= and
@@ -222,6 +224,20 @@ doesn't work on many custom pairs?)
 ** Why not use together?
    Sure! You can make =embrace= and =evil-surround= work together. Look at
    [[https://github.com/cute-jumper/evil-embrace.el][evil-embrace]]!
+
+* Screencasts
+  For non-Evil users, use the following settings:
+  : (global-set-key (kbd "C-,") #'embrace-commander)
+  : (add-hook 'org-mode-hook #'embrace-org-mode-hook)
+
+  Open an org-mode file, we can perform the following pair changing:
+
+  [[./screencasts/embrace.gif]]
+
+  For =evil-mode= users, here is a similar screencast (see [[https://github.com/cute-jumper/evil-embrace.el][evil-embrace]] for more
+  details):
+
+  [[https://github.com/cute-jumper/evil-embrace.el/blob/master/screencasts/evil-embrace.gif]]
 
 * Contributions
 This package is still in early stage, but it is quite usable right now. More
