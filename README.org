@@ -174,11 +174,18 @@ doesn't work on many custom pairs?)
    | +   | +                | +                 |
    | k   | =@@html:<kbd>@@= | =@@html:</kbd>@@= |
 
+   =ruby-mode (and enh-ruby-mode)=:
+   | Key | Left | Right |
+   |-----+------+-------|
+   | d   | do   | end   |
+   | #   | #{   | }     |
+
    To use them:
    : (add-hook 'LaTeX-mode-hook 'embrace-LaTeX-mode-hook)
    : (add-hook 'org-mode-hook 'embrace-org-mode-hook)
+   : (add-hook 'ruby-mode-hook 'embrace-ruby-mode-hook) ;; or 'enh-ruby-mode-hook
 
-   The code for the two hooks above (which are defined in =embrace.el=):
+   The code for the three hooks above (which are defined in =embrace.el=):
    : (defun embrace-LaTeX-mode-hook ()
    :   (dolist (lst '((?= "\\verb|" . "|")
    :                  (?~ "\\texttt{" . "}")
@@ -194,6 +201,10 @@ doesn't work on many custom pairs?)
    :                  (?+ "+" . "+")
    :                  (?k "@@html:<kbd>@@" . "@@html:</kbd>@@")))
    :     (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
+   : (defun embrace-ruby-mode-hook ()
+   :   (dolist (lst '((?# "#{" "}")
+   :                  (?d "do" "end")))
+   :     (embrace-add-pair (car lst) (cadr lst) (caddr lst))))
 
    You can define and use your own hook function similar to the code above.
 
