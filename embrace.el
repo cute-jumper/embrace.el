@@ -411,7 +411,7 @@
 
 (defvar embrace--pairs-list nil)
 
-(defun embrace-add-pair (key left right)
+(defun embrace-add-pair (key left right &optional auto-newline)
   (assq-delete-all key embrace--pairs-list)
   (add-to-list 'embrace--pairs-list
                (cons key (make-embrace-pair-struct
@@ -419,7 +419,8 @@
                           :left left
                           :right right
                           :left-regexp (regexp-quote left)
-                          :right-regexp (regexp-quote right)))))
+                          :right-regexp (regexp-quote right)
+                          :auto-newline auto-newline))))
 
 (defun embrace-add-pair-regexp
     (key left-regexp right-regexp read-function &optional auto-newline)
@@ -527,10 +528,13 @@
       (delete-overlay overlay))))
 
 (defun embrace--delete (char &optional change-p)
-  (let* ((struct (assoc-default char embrace--pairs-list))
-         (open (embrace-pair-struct-left-regexp struct))
-         (close (embrace-pair-struct-right-regexp struct))
-         (overlay (embrace--get-region-overlay open close)))
+  (let ((struct (assoc-default char embrace--pairs-list))
+        open close overlay auto-newline)
+    (when struct
+      (setq open (embrace-pair-struct-left-regexp struct))
+      (setq close (embrace-pair-struct-right-regexp struct))
+      (setq overlay (embrace--get-region-overlay open close))
+      (setq auto-newline (embrace-pair-struct-auto-newline struct)))
     (unless overlay
       (error "No such a pair found"))
     (unwind-protect
@@ -539,9 +543,15 @@
             (goto-char (overlay-start overlay))
             (when (looking-at open)
               (delete-char (string-width (match-string 0))))
+            (and auto-newline
+                 (looking-at-p "[[:space:]]*\n")
+                 (zap-to-char 1 ?\n))
             (goto-char (overlay-end overlay))
             (when (looking-back close)
-              (backward-delete-char (string-width (match-string 0)))))
+              (backward-delete-char (string-width (match-string 0))))
+            (and auto-newline
+                 (looking-back "\n[[:space:]]*")
+                 (delete-region (match-beginning 0) (point))))
           (when change-p overlay))
       (unless change-p (delete-overlay overlay)))))
 
