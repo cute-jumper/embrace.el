@@ -147,6 +147,11 @@ doesn't work on many custom pairs?)
    Note that if you're using =embrace-add-pair= to add an existing key, then it
    will replace the old one.
 
+
+** Disable Help Message
+   If you find the help message annoying, use the following code to disable it:
+   : (setq embrace-show-help-p nil)
+
 ** Example Settings
    I recommend binding a convenient key for =embrace-commander=. For example,
    : (global-set-key (kbd "C-,") #'embrace-commander)
@@ -172,7 +177,7 @@ doesn't work on many custom pairs?)
    | *   | *                | *                 |
    | _   | _                | _                 |
    | +   | +                | +                 |
-   | k   | =@@html:<kbd>@@= | =@@html:</kbd>@@= |
+   | k   | ~@@html:<kbd>@@~ | ~@@html:</kbd>@@~ |
 
    To use them:
    : (add-hook 'LaTeX-mode-hook 'embrace-LaTeX-mode-hook)
