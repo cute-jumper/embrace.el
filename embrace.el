@@ -400,6 +400,9 @@
   :group 'editing
   :prefix "embrace-")
 
+(defvar embrace-show-help-p t
+  "Whether we need to show the help buffer or not.")
+
 ;; faces
 (defface embrace-help-key-face
   '((t . (:bold t
@@ -496,37 +499,6 @@
 (defvar embrace--help-buffer nil)
 (defvar embrace--help-add-column-width 3)
 (defvar embrace-help-separator " → ")
-
-(defun embrace--pair-struct-to-keys (pair-struct)
-  (list (propertize (format "%c" (embrace-pair-struct-key pair-struct))
-                    'face 'embrace-help-key-face)
-        (propertize embrace-help-separator
-                    'face 'embrace-help-separator-face)
-        (or (embrace-pair-struct-help pair-struct)
-            (concat
-             (propertize
-              (or (embrace-pair-struct-left pair-struct)
-                  (embrace-pair-struct-left-regexp pair-struct))
-              'face
-              'embrace-help-pair-face)
-             ".."
-             (propertize
-              (or (embrace-pair-struct-right pair-struct)
-                  (embrace-pair-struct-right-regexp pair-struct))
-              'face
-              'embrace-help-pair-face)))))
-
-(defun embrace--units-alist-to-keys ()
-  (mapcar (lambda (pair) (list
-                      (propertize (format "%c" (car pair))
-                                  'face
-                                  'embrace-help-key-face)
-                      (propertize embrace-help-separator
-                                  'face 'embrace-help-separator-face)
-                      (propertize (symbol-name (cdr pair))
-                                  'face
-                                  'embrace-help-mark-func-face)))
-          embrace-semantic-units-alist))
 
 (defun embrace--char-enlarged-p (&optional _frame)
   (> (frame-char-width)
@@ -629,6 +601,14 @@
     (setq-local word-wrap nil)
     (setq-local show-trailing-whitespace nil)))
 
+(defmacro embrace--show-help-buffer-defun (name body)
+  (declare (indent 1))
+  (let ((func (intern (format "embrace--show-%s-help-buffer" name))))
+    `(defun ,func ()
+       (and embrace-show-help-p
+            (embrace--show-help-buffer (embrace--create-help-string
+                                        ,body))))))
+
 (defun embrace--show-help-buffer (help-string)
   (let ((alist '((window-width . (lambda (w) (fit-window-to-buffer w nil 1)))
                  (window-height . (lambda (w) (fit-window-to-buffer w nil 1))))))
@@ -641,15 +621,65 @@
       (display-buffer-in-major-side-window
        embrace--help-buffer 'bottom 0 alist))))
 
-(defun embrace--show-pair-help-buffer ()
-  (embrace--show-help-buffer (embrace--create-help-string
-                              (mapcar
-                               (lambda (s) (embrace--pair-struct-to-keys (cdr s)))
-                               embrace--pairs-list))))
+(defun embrace--pair-struct-to-keys (pair-struct)
+  (list (propertize (format "%c" (embrace-pair-struct-key pair-struct))
+                    'face 'embrace-help-key-face)
+        (propertize embrace-help-separator
+                    'face 'embrace-help-separator-face)
+        (or (embrace-pair-struct-help pair-struct)
+            (concat
+             (propertize
+              (or (embrace-pair-struct-left pair-struct)
+                  (embrace-pair-struct-left-regexp pair-struct))
+              'face
+              'embrace-help-pair-face)
+             ".."
+             (propertize
+              (or (embrace-pair-struct-right pair-struct)
+                  (embrace-pair-struct-right-regexp pair-struct))
+              'face
+              'embrace-help-pair-face)))))
 
-(defun embrace--show-unit-help-buffer ()
-  (embrace--show-help-buffer (embrace--create-help-string
-                              (embrace--units-alist-to-keys))))
+(embrace--show-help-buffer-defun pair
+  (mapcar
+   (lambda (s) (embrace--pair-struct-to-keys (cdr s)))
+   embrace--pairs-list))
+
+(defun embrace--units-alist-to-keys ()
+  (mapcar (lambda (pair) (list
+                      (propertize (format "%c" (car pair))
+                                  'face
+                                  'embrace-help-key-face)
+                      (propertize embrace-help-separator
+                                  'face 'embrace-help-separator-face)
+                      (propertize (symbol-name (cdr pair))
+                                  'face
+                                  'embrace-help-mark-func-face)))
+          embrace-semantic-units-alist))
+
+(embrace--show-help-buffer-defun unit
+  (embrace--units-alist-to-keys))
+
+(defvar embrace--command-keys nil)
+(defun embrace--commands-to-keys ()
+  (or embrace--command-keys
+      (let (lst)
+        (dolist (pair '(("a" . "add")
+                        ("c" . "change")
+                        ("d" . "delete")))
+          (push (list (propertize (car pair)
+                                  'face
+                                  'embrace-help-key-face)
+                      (propertize embrace-help-separator
+                                  'face 'embrace-help-separator-face)
+                      (propertize (cdr pair)
+                                  'face
+                                  'embrace-help-mark-func-face))
+                lst))
+        (setq embrace--command-keys lst))))
+
+(embrace--show-help-buffer-defun command
+  (embrace--commands-to-keys))
 
 (defun embrace--hide-help-buffer ()
   (and (buffer-live-p embrace--help-buffer)
@@ -794,34 +824,37 @@
 (defun embrace-add ()
   (interactive)
   (let (mark-func)
-    (save-excursion
-      ;; only ask for semantic unit if region isn't already set
-      (unless (use-region-p)
-        (embrace--show-unit-help-buffer)
-        (setq mark-func (assoc-default (read-char "Semantic unit: ")
-                                       embrace-semantic-units-alist))
-        (unless (fboundp mark-func)
-          (error "No such a semantic unit"))
-        (funcall mark-func))
-      (embrace--show-pair-help-buffer)
-      (unwind-protect
+    (unwind-protect
+        (save-excursion
+          ;; only ask for semantic unit if region isn't already set
+          (unless (use-region-p)
+            (embrace--show-unit-help-buffer)
+            (setq mark-func (assoc-default (read-char "Semantic unit: ")
+                                           embrace-semantic-units-alist))
+            (unless (fboundp mark-func)
+              (error "No such a semantic unit"))
+            (funcall mark-func))
+          (embrace--show-pair-help-buffer)
           (embrace--add-internal (region-beginning) (region-end)
-                                 (read-char "Add pair: "))
-        (embrace--hide-help-buffer)))))
+                                 (read-char "Add pair: ")))
+      (embrace--hide-help-buffer))))
 
 ;;;###autoload
 (defun embrace-commander ()
   (interactive)
-  (let ((char (read-char "Command [acd]: ")))
-    (cond
-     ((eq char ?a)
-      (call-interactively 'embrace-add))
-     ((eq char ?c)
-      (call-interactively 'embrace-change))
-     ((eq char ?d)
-      (call-interactively 'embrace-delete))
-     (t
-      (error "Unknow command")))))
+  (embrace--show-command-help-buffer)
+  (unwind-protect
+      (let ((char (read-char "Command: ")))
+        (cond
+         ((eq char ?a)
+          (call-interactively 'embrace-add))
+         ((eq char ?c)
+          (call-interactively 'embrace-change))
+         ((eq char ?d)
+          (call-interactively 'embrace-delete))
+         (t
+          (error "Unknow command"))))
+    (embrace--hide-help-buffer)))
 
 ;; -------- ;;
 ;; Bindings ;;
