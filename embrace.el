@@ -400,6 +400,29 @@
   :group 'editing
   :prefix "embrace-")
 
+;; faces
+(defface embrace-help-key-face
+  '((t . (:bold t
+                :inherit font-lock-keyword-face)))
+  "Face for keys."
+  :group 'embrace)
+
+(defface embrace-help-separator-face
+  '((t . (:inherit font-lock-comment-face)))
+  "Face for separators."
+  :group 'embrace)
+
+(defface embrace-help-pair-face
+  `((t . (:background ,(foreground-color-at-point)
+                      :foreground ,(background-color-at-point))))
+  "Face for pairs."
+  :group 'embrace)
+
+(defface embrace-help-mark-func-face
+  '((t . (:inherit font-lock-function-name-face)))
+  "Face for mark functions."
+  :group 'embrace)
+
 (cl-defstruct embrace-pair-struct
   key left right left-regexp right-regexp read-function help auto-newline)
 
@@ -441,6 +464,11 @@
                           :help help
                           :auto-newline auto-newline))))
 
+(defun embrace-build-help (left right)
+  (concat (propertize left 'face 'embrace-help-pair-face)
+          ".."
+          (propertize right 'face 'embrace-help-pair-face)))
+
 (defun embrace--setup-defaults ()
   (dolist (pair '((?\( . ("(" . ")"))
                   (?\) . ("( " . " )"))
@@ -454,13 +482,9 @@
                   (?\' . ("\'" . "\'"))))
     (embrace-add-pair (car pair) (cadr pair) (cddr pair)))
   (embrace-add-pair-regexp ?t "<[^>]*?>" "</[^>]*?>" 'embrace-with-tag
-                           (concat (propertize "<tag attr>" 'face 'embrace-help-pair-face)
-                                   ".."
-                                   (propertize "</tag>" 'face 'embrace-help-pair-face))) ;
+                           (embrace-build-help "<tag attr>" "</tag>"))
   (embrace-add-pair-regexp ?f "\\(\\w\\|\\s_\\)+?(" ")" 'embrace-with-function
-                           (concat (propertize "function(" 'face 'embrace-help-pair-face)
-                                   ".."
-                                   (propertize ")" 'face 'embrace-help-pair-face))))
+                           (embrace-build-help "function(" ")")))
 
 (embrace--setup-defaults)
 (make-variable-buffer-local 'embrace--pairs-list)
@@ -472,28 +496,6 @@
 (defvar embrace--help-buffer nil)
 (defvar embrace--help-add-column-width 3)
 (defvar embrace-help-separator " → ")
-;; faces
-(defface embrace-help-key-face
-  '((t . (:bold t
-                :inherit font-lock-keyword-face)))
-  "Face for keys."
-  :group 'embrace)
-
-(defface embrace-help-separator-face
-  '((t . (:inherit font-lock-comment-face)))
-  "Face for separators."
-  :group 'embrace)
-
-(defface embrace-help-pair-face
-  `((t . (:background ,(foreground-color-at-point)
-                      :foreground ,(background-color-at-point))))
-  "Face for pairs."
-  :group 'embrace)
-
-(defface embrace-help-mark-func-face
-  '((t . (:inherit font-lock-function-name-face)))
-  "Face for mark functions."
-  :group 'embrace)
 
 (defun embrace--pair-struct-to-keys (pair-struct)
   (list (propertize (format "%c" (embrace-pair-struct-key pair-struct))
@@ -861,7 +863,8 @@
                  (?+ "+" . "+")
                  (?k "@@html:<kbd>@@" . "@@html:</kbd>@@")))
     (embrace-add-pair (car lst) (cadr lst) (cddr lst)))
-  (embrace-add-pair-regexp ?l "#\\+BEGIN_.*" "#\\+END_.*" 'embrace-with-org-block t))
+  (embrace-add-pair-regexp ?l "#\\+BEGIN_.*" "#\\+END_.*" 'embrace-with-org-block
+                           (embrace-build-help "#+BEGIN_*" "#+END") t))
 
 (provide 'embrace)
 ;;; embrace.el ends here
