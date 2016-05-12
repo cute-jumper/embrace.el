@@ -35,12 +35,14 @@
 ;; 1 Overview
 ;; 2 Usage
 ;; .. 2.1 Example
-;; .. 2.2 `embrace-change' and `embrace-delete'
-;; .. 2.3 `embrace-add'
+;; .. 2.2 Screencasts
+;; .. 2.3 `embrace-change' and `embrace-delete'
+;; .. 2.4 `embrace-add'
 ;; 3 Customization
 ;; .. 3.1 Adding More Semantic Units
 ;; .. 3.2 Adding More Surrounding Pairs
-;; .. 3.3 Example Settings
+;; .. 3.3 Disable Help Message
+;; .. 3.4 Example Settings
 ;; 4 For `evil-surround' Users
 ;; .. 4.1 Where `embrace' is better
 ;; .. 4.2 Where `evil-surround' is better
@@ -51,8 +53,12 @@
 
 ;; Add/Change/Delete pairs based on [expand-region].
 
+;; For `evil-surround' integration, see [evil-embrace].
+
 
 ;; [expand-region] https://github.com/magnars/expand-region.el
+
+;; [evil-embrace] https://github.com/cute-jumper/evil-embrace.el
 
 
 ;; 1 Overview
@@ -144,7 +150,30 @@
 ;;   `evil-surround' doesn't work while `embrace' works!
 
 
-;; 2.2 `embrace-change' and `embrace-delete'
+;; 2.2 Screencasts
+;; ~~~~~~~~~~~~~~~
+
+;;   For non `evil-mode' users, use the following settings (they will be
+;;   explained later):
+;;   ,----
+;;   | (global-set-key (kbd "C-,") #'embrace-commander)
+;;   | (add-hook 'org-mode-hook #'embrace-org-mode-hook)
+;;   `----
+
+;;   Open an org-mode file, we can perform the following pair changing:
+
+;;   [./screencasts/embrace.gif]
+
+;;   For `evil-mode' users, here is a similar screencast (see
+;;   [evil-embrace] for more details):
+
+;;   [https://github.com/cute-jumper/evil-embrace.el/blob/master/screencasts/evil-embrace.gif]
+
+
+;; [evil-embrace] https://github.com/cute-jumper/evil-embrace.el
+
+
+;; 2.3 `embrace-change' and `embrace-delete'
 ;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;;   These two commands can change and delete the surround pair
@@ -173,7 +202,7 @@
 ;;   input.
 
 
-;; 2.3 `embrace-add'
+;; 2.4 `embrace-add'
 ;; ~~~~~~~~~~~~~~~~~
 
 ;;   This command is similar to `evil-surround''s `ys' command. We need to
@@ -237,7 +266,17 @@
 ;;   then it will replace the old one.
 
 
-;; 3.3 Example Settings
+;; 3.3 Disable Help Message
+;; ~~~~~~~~~~~~~~~~~~~~~~~~
+
+;;   If you find the help message annoying, use the following code to
+;;   disable it:
+;;   ,----
+;;   | (setq embrace-show-help-p nil)
+;;   `----
+
+
+;; 3.4 Example Settings
 ;; ~~~~~~~~~~~~~~~~~~~~
 
 ;;   I recommend binding a convenient key for `embrace-commander'. For
@@ -253,24 +292,47 @@
 ;;   `LaTeX-mode':
 ;;    Key  Left      Right
 ;;   ----------------------
-;;    =    \verb |   |
+;;    =    \verb|    |
 ;;    ~    \texttt{  }
 ;;    *    \textbf{  }
 
 ;;   `org-mode':
-;;    Key  Left  Right
-;;   ------------------
-;;    =    =     =
-;;    ~    ~     ~
-;;    *    *     *
-;;    _    _     _
-;;    +    +     +
+;;    Key  Left              Right
+;;   ------------------------------------------
+;;    =    =                 =
+;;    ~    ~                 ~
+;;    *    *                 *
+;;    _    _                 _
+;;    +    +                 +
+;;    k    `@@html:<kbd>@@'  `@@html:</kbd>@@'
 
 ;;   To use them:
 ;;   ,----
 ;;   | (add-hook 'LaTeX-mode-hook 'embrace-LaTeX-mode-hook)
 ;;   | (add-hook 'org-mode-hook 'embrace-org-mode-hook)
 ;;   `----
+
+;;   The code for the two hooks above (which are defined in `embrace.el'):
+;;   ,----
+;;   | (defun embrace-LaTeX-mode-hook ()
+;;   |   (dolist (lst '((?= "\\verb|" . "|")
+;;   |                  (?~ "\\texttt{" . "}")
+;;   |                  (?/ "\\emph{" . "}")
+;;   |                  (?* "\\textbf{" . "}")))
+;;   |     (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
+;;   | (defun embrace-org-mode-hook ()
+;;   |   (dolist (lst '((?= "=" . "=")
+;;   |                  (?~ "~" . "~")
+;;   |                  (?/ "/" . "/")
+;;   |                  (?* "*" . "*")
+;;   |                  (?_ "_" . "_")
+;;   |                  (?+ "+" . "+")
+;;   |                  (?k "@@html:<kbd>@@" . "@@html:</kbd>@@")))
+;;   |     (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
+;;   `----
+
+;;   You can define and use your own hook function similar to the code
+;;   above.
 
 ;;   Welcome to add some settings for more major modes.
 
@@ -330,38 +392,11 @@
 ;; 4.3 Why not use together?
 ;; ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-;;   Sure! You can make `embrace' and `evil-surround' work together.
+;;   Sure! You can make `embrace' and `evil-surround' work together. Look
+;;   at [evil-embrace]!
 
-;;   Use the following command to enable the integration:
-;;   ,----
-;;   | (embrace-enable-evil-surround-integration)
-;;   `----
 
-;;   And use `embrace-disable-evil-surround-integration' to disable.
-
-;;   The idea is that `evil-surround' works great if there are already text
-;;   objects defined. So when users press a key that can be mapped to a
-;;   text object, it is handled by `evil-surround'. Otherwise, let
-;;   `embrace' handle it.
-
-;;   The keys that are processed by `evil-surround' are saved in the
-;;   variable `embrace-evil-surround-key'. The default value is:
-;;   ,----
-;;   | (?\( ?\[ ?\{ ?\) ?\] ?\} ?\" ?\' ?b ?B ?t)
-;;   `----
-
-;;   Note that this variable is also buffer-local. You should change it in
-;;   the hook:
-;;   ,----
-;;   | (add-hook 'LaTeX-mode-hook
-;;   |     (lambda ()
-;;   |        (add-to-list 'embrace-evil-surround-key ?o)))
-;;   `----
-
-;;   Only these keys saved in the variable are processed by
-;;   `evil-surround', and all the other keys will be processed by
-;;   `embrace'. You can customize `embrace' in the way described in the
-;;   previous *Customization* section to add support for additional pairs.
+;; [evil-embrace] https://github.com/cute-jumper/evil-embrace.el
 
 
 ;; 5 Contributions
@@ -375,11 +410,14 @@
 ;; 6 Related Packages
 ;; ==================
 
+;;   - [evil-embrace]
 ;;   - [expand-region]
 ;;   - [evil-surround]
 ;;   - [change-inner]
 ;;   - [smartparens]
 
+
+;; [evil-embrace] https://github.com/cute-jumper/evil-embrace.el
 
 ;; [expand-region] https://github.com/magnars/expand-region.el
 

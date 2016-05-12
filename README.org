@@ -161,12 +161,12 @@ doesn't work on many custom pairs?)
    hooks for =LaTeX-mode= and =org-mode=:
 
    =LaTeX-mode=:
-   | Key | Left        | Right |
-   |-----+-------------+-------|
-   | =   | =\verb|=    | \vert |
-   | ~   | \texttt{    | }     |
-   | /   | \emph{      | }     |
-   | *   | \textbf{    | }     |
+   | Key | Left       | Right |
+   |-----+------------+-------|
+   | =   | \verb\vert | \vert |
+   | ~   | \texttt{   | }     |
+   | /   | \emph{     | }     |
+   | *   | \textbf{   | }     |
 
    =org-mode=:
    | Key | Left             | Right             |
