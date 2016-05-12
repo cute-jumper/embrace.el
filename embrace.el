@@ -45,8 +45,7 @@
 ;; .. 3.4 Example Settings
 ;; 4 For `evil-surround' Users
 ;; .. 4.1 Where `embrace' is better
-;; .. 4.2 Where `evil-surround' is better
-;; .. 4.3 Why not use together?
+;; .. 4.2 Why not use together?
 ;; 5 Contributions
 ;; 6 Related Packages
 
@@ -358,38 +357,7 @@
 ;;   *TL;DR*: `embrace' is more customizable.
 
 
-;; 4.2 Where `evil-surround' is better
-;; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-;;   `expand-region' works on semantic units, which can be different in
-;;   different major modes, which causes `embrace' to have different
-;;   behaviors in differnt major modes. However, `evil-surround' is based
-;;   on text objects. You can expect it to have the same behavior in
-;;   different major modes.
-
-;;   Assume the following text in `LaTeX-mode':
-;;   ,----
-;;   | a<foo>{ ba|r }</foo>a
-;;   `----
-
-;;   Using `embrace', it is impossible to find the tag `<foo>' and `</foo>'
-;;   since they are not meaningfun under `LaTeX-mode' so `expand-region'
-;;   would not consider the tag as a semantic unit. Therefore,
-;;   `embrace-delete' can not delete the tag (it *does* work if you delete
-;;   the letter =a=s at both ends).
-
-;;   However, if you change the major mode to `html-mode', `embrace' works
-;;   since now the `<foo>' tag becomes meaningful in current context.
-
-;;   In both situations, `evil-surround' can work because `tag' is an evil
-;;   text object that has already been defined.
-
-;;   If you're a programmer, you probably always work on some blocks that
-;;   are meaningful in the current context. From this point of view,
-;;   `embrace''s behavior makes more sense.
-
-
-;; 4.3 Why not use together?
+;; 4.2 Why not use together?
 ;; ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;;   Sure! You can make `embrace' and `evil-surround' work together. Look
