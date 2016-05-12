@@ -615,7 +615,8 @@
     (embrace--setup-help-buffer)
     (with-current-buffer embrace--help-buffer
       (erase-buffer)
-      (insert help-string))
+      (insert help-string)
+      (goto-char (point-min)))
     (if (get-buffer-window embrace--help-buffer)
         (display-buffer-reuse-window embrace--help-buffer alist)
       (display-buffer-in-major-side-window
