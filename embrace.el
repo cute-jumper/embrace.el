@@ -393,9 +393,15 @@
 
 (require 'expand-region)
 (require 'cl-lib)
+(require 'font-lock)
+
+(defgroup embrace nil
+  "Add/Change/Delete pairs based on `expand-region'."
+  :group 'editing
+  :prefix "embrace-")
 
 (cl-defstruct embrace-pair-struct
-  key left right left-regexp right-regexp read-function auto-newline)
+  key left right left-regexp right-regexp read-function help auto-newline)
 
 (defvar embrace-semantic-units-alist '((?w . er/mark-word)
                                        (?s . er/mark-symbol)
@@ -411,7 +417,7 @@
 
 (defvar embrace--pairs-list nil)
 
-(defun embrace-add-pair (key left right &optional auto-newline)
+(defun embrace-add-pair (key left right &optional help auto-newline)
   (assq-delete-all key embrace--pairs-list)
   (add-to-list 'embrace--pairs-list
                (cons key (make-embrace-pair-struct
@@ -420,10 +426,11 @@
                           :right right
                           :left-regexp (regexp-quote left)
                           :right-regexp (regexp-quote right)
+                          :help help
                           :auto-newline auto-newline))))
 
 (defun embrace-add-pair-regexp
-    (key left-regexp right-regexp read-function &optional auto-newline)
+    (key left-regexp right-regexp read-function &optional help auto-newline)
   (assq-delete-all key embrace--pairs-list)
   (add-to-list 'embrace--pairs-list
                (cons key (make-embrace-pair-struct
@@ -431,6 +438,7 @@
                           :read-function read-function
                           :left-regexp left-regexp
                           :right-regexp right-regexp
+                          :help help
                           :auto-newline auto-newline))))
 
 (defun embrace--setup-defaults ()
@@ -445,12 +453,209 @@
                   (?\" . ("\"" . "\""))
                   (?\' . ("\'" . "\'"))))
     (embrace-add-pair (car pair) (cadr pair) (cddr pair)))
-  (embrace-add-pair-regexp ?t "u]*?>" "u]*?>" 'embrace-with-tag)
-  (embrace-add-pair-regexp ?f "\\(\\w\\|\\s_\\)+?(" ")" 'embrace-with-function))
+  (embrace-add-pair-regexp ?t "<[^>]*?>" "</[^>]*?>" 'embrace-with-tag
+                           (concat (propertize "<tag attr>" 'face 'embrace-help-pair-face)
+                                   ".."
+                                   (propertize "</tag>" 'face 'embrace-help-pair-face))) ;
+  (embrace-add-pair-regexp ?f "\\(\\w\\|\\s_\\)+?(" ")" 'embrace-with-function
+                           (concat (propertize "function(" 'face 'embrace-help-pair-face)
+                                   ".."
+                                   (propertize ")" 'face 'embrace-help-pair-face))))
 
 (embrace--setup-defaults)
 (make-variable-buffer-local 'embrace--pairs-list)
 
+;; -------------------------------- ;;
+;; Help system based on `which-key' ;;
+;; -------------------------------- ;;
+(defvar embrace--help-buffer-name "*embrace-help*")
+(defvar embrace--help-buffer nil)
+(defvar embrace--help-add-column-width 3)
+(defvar embrace-help-separator " → ")
+;; faces
+(defface embrace-help-key-face
+  '((t . (:bold t
+                :inherit font-lock-keyword-face)))
+  "Face for keys."
+  :group 'embrace)
+
+(defface embrace-help-separator-face
+  '((t . (:inherit font-lock-comment-face)))
+  "Face for separators."
+  :group 'embrace)
+
+(defface embrace-help-pair-face
+  `((t . (:background ,(foreground-color-at-point)
+                      :foreground ,(background-color-at-point))))
+  "Face for pairs."
+  :group 'embrace)
+
+(defface embrace-help-mark-func-face
+  '((t . (:inherit font-lock-function-name-face)))
+  "Face for mark functions."
+  :group 'embrace)
+
+(defun embrace--pair-struct-to-keys (pair-struct)
+  (list (propertize (format "%c" (embrace-pair-struct-key pair-struct))
+                    'face 'embrace-help-key-face)
+        (propertize embrace-help-separator
+                    'face 'embrace-help-separator-face)
+        (or (embrace-pair-struct-help pair-struct)
+            (concat
+             (propertize
+              (or (embrace-pair-struct-left pair-struct)
+                  (embrace-pair-struct-left-regexp pair-struct))
+              'face
+              'embrace-help-pair-face)
+             ".."
+             (propertize
+              (or (embrace-pair-struct-right pair-struct)
+                  (embrace-pair-struct-right-regexp pair-struct))
+              'face
+              'embrace-help-pair-face)))))
+
+(defun embrace--units-alist-to-keys ()
+  (mapcar (lambda (pair) (list
+                      (propertize (format "%c" (car pair))
+                                  'face
+                                  'embrace-help-key-face)
+                      (propertize embrace-help-separator
+                                  'face 'embrace-help-separator-face)
+                      (propertize (symbol-name (cdr pair))
+                                  'face
+                                  'embrace-help-mark-func-face)))
+          embrace-semantic-units-alist))
+
+(defun embrace--char-enlarged-p (&optional _frame)
+  (> (frame-char-width)
+     (/ (float (frame-pixel-width)) (window-total-width (frame-root-window)))))
+
+(defun embrace--total-width-to-text (total-width)
+  (let ((char-width (frame-char-width)))
+    (- total-width
+       (/ (frame-fringe-width) char-width)
+       (/ (frame-scroll-bar-width) char-width)
+       (if (embrace--char-enlarged-p) 1 0)
+       3)))
+
+(defun embrace--get-help-buffer-max-dims ()
+  (cons (round (* 0.25 (window-total-height (frame-root-window))))
+        (max 0
+             (embrace--total-width-to-text
+              (round (* 1.0 (window-total-width (frame-root-window))))))))
+
+(defsubst embrace--string-width (maybe-string)
+  (if (stringp maybe-string) (string-width maybe-string) 0))
+
+(defsubst embrace--max-len (keys index)
+  (cl-reduce
+   (lambda (x y) (max x (embrace--string-width (nth index y))))
+   keys :initial-value 0))
+
+(defun embrace--normalize-columns (columns)
+  (let ((max-len (cl-reduce (lambda (a x) (max a (length x))) columns
+                            :initial-value 0)))
+    (mapcar
+     (lambda (c)
+       (if (< (length c) max-len)
+           (append c (make-list (- max-len (length c)) ""))
+         c))
+     columns)))
+
+(defsubst embrace--join-columns (columns)
+  (let* ((padded (embrace--normalize-columns columns))
+         (rows (apply #'cl-mapcar #'list padded)))
+    (mapconcat (lambda (row) (mapconcat #'identity row " ")) rows "\n")))
+
+(defun embrace--partition-list (n list)
+  (let (res)
+    (while list
+      (setq res (cons (cl-subseq list 0 (min n (length list))) res)
+            list (nthcdr n list)))
+    (nreverse res)))
+
+(defun embrace--pad-column (col-keys)
+  (let* ((col-key-width  (+ embrace--help-add-column-width
+                            (embrace--max-len col-keys 0)))
+         (col-sep-width  (embrace--max-len col-keys 1))
+         (col-desc-width (embrace--max-len col-keys 2))
+         (col-width      (+ 1 col-key-width col-sep-width col-desc-width)))
+    (cons col-width
+          (mapcar (lambda (k)
+                    (format (concat "%" (int-to-string col-key-width)
+                                    "s%s%-" (int-to-string col-desc-width) "s")
+                            (nth 0 k) (nth 1 k) (nth 2 k)))
+                  col-keys))))
+
+(defun embrace--list-to-columns (keys avl-lines avl-width)
+  (let ((cols-w-widths (mapcar #'embrace--pad-column
+                               (embrace--partition-list avl-lines keys))))
+    (when (<= (apply #'+ (mapcar #'car cols-w-widths)) avl-width)
+      (embrace--join-columns (mapcar #'cdr cols-w-widths)))))
+
+(defun embrace--create-help-string-1 (keys available-lines available-width)
+  (let ((result (embrace--list-to-columns
+                 keys available-lines available-width))
+        found prev-result)
+    (if (= 1 available-lines)
+        result
+      (while (and (> available-lines 1)
+                  (not found))
+        (setq available-lines (- available-lines 1)
+              prev-result result
+              result (embrace--list-to-columns
+                      keys available-lines available-width)
+              found (not result)))
+      (if found prev-result result))))
+
+(defun embrace--create-help-string (keys)
+  (let* ((max-dims (embrace--get-help-buffer-max-dims))
+         (avl-lines (1- (car max-dims)))
+         (avl-width (cdr max-dims)))
+    (embrace--create-help-string-1 keys avl-lines avl-width)))
+
+(defun embrace--setup-help-buffer ()
+  (with-current-buffer
+      (setq embrace--help-buffer
+            (get-buffer-create embrace--help-buffer-name))
+    (let (message-log-max)
+      (toggle-truncate-lines 1)
+      (message ""))
+    (setq-local cursor-type nil)
+    (setq-local cursor-in-non-selected-windows nil)
+    (setq-local mode-line-format nil)
+    (setq-local word-wrap nil)
+    (setq-local show-trailing-whitespace nil)))
+
+(defun embrace--show-help-buffer (help-string)
+  (let ((alist '((window-width . (lambda (w) (fit-window-to-buffer w nil 1)))
+                 (window-height . (lambda (w) (fit-window-to-buffer w nil 1))))))
+    (embrace--setup-help-buffer)
+    (with-current-buffer embrace--help-buffer
+      (erase-buffer)
+      (insert help-string))
+    (if (get-buffer-window embrace--help-buffer)
+        (display-buffer-reuse-window embrace--help-buffer alist)
+      (display-buffer-in-major-side-window
+       embrace--help-buffer 'bottom 0 alist))))
+
+(defun embrace--show-pair-help-buffer ()
+  (embrace--show-help-buffer (embrace--create-help-string
+                              (mapcar
+                               (lambda (s) (embrace--pair-struct-to-keys (cdr s)))
+                               embrace--pairs-list))))
+
+(defun embrace--show-unit-help-buffer ()
+  (embrace--show-help-buffer (embrace--create-help-string
+                              (embrace--units-alist-to-keys))))
+
+(defun embrace--hide-help-buffer ()
+  (and (buffer-live-p embrace--help-buffer)
+       (quit-windows-on embrace--help-buffer)))
+
+;; ------------------- ;;
+;; funcions & commands ;;
+;; ------------------- ;;
 (defun embrace-with-tag ()
   (let* ((input (read-string "Tag: "))
          (_ (string-match "\\([0-9a-z-]+\\)\\(.*?\\)[>]*$" input))
@@ -565,12 +770,18 @@
 ;;;###autoload
 (defun embrace-delete ()
   (interactive)
-  (embrace--change-internal nil))
+  (embrace--show-pair-help-buffer)
+  (unwind-protect
+      (embrace--change-internal nil)
+    (embrace--hide-help-buffer)))
 
 ;;;###autoload
 (defun embrace-change ()
   (interactive)
-  (embrace--change-internal t))
+  (embrace--show-pair-help-buffer)
+  (unwind-protect
+      (embrace--change-internal t)
+    (embrace--hide-help-buffer)))
 
 (defun embrace--add-internal (beg end char)
   (let ((overlay (make-overlay beg end nil nil t)))
@@ -584,13 +795,17 @@
     (save-excursion
       ;; only ask for semantic unit if region isn't already set
       (unless (use-region-p)
+        (embrace--show-unit-help-buffer)
         (setq mark-func (assoc-default (read-char "Semantic unit: ")
                                        embrace-semantic-units-alist))
         (unless (fboundp mark-func)
           (error "No such a semantic unit"))
         (funcall mark-func))
-      (embrace--add-internal (region-beginning) (region-end)
-                             (read-char "Add pair: ")))))
+      (embrace--show-pair-help-buffer)
+      (unwind-protect
+          (embrace--add-internal (region-beginning) (region-end)
+                                 (read-char "Add pair: "))
+        (embrace--hide-help-buffer)))))
 
 ;;;###autoload
 (defun embrace-commander ()
