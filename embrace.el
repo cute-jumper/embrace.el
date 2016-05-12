@@ -403,7 +403,7 @@
 ;; faces
 (defface embrace-help-key-face
   '((t . (:bold t
-                :inherit font-lock-keyword-face)))
+                :inherit font-lock-constant-face)))
   "Face for keys."
   :group 'embrace)
 
@@ -413,8 +413,8 @@
   :group 'embrace)
 
 (defface embrace-help-pair-face
-  `((t . (:background ,(foreground-color-at-point)
-                      :foreground ,(background-color-at-point))))
+  `((t . (:inverse-video t
+                         :inherit font-lock-function-name-face)))
   "Face for pairs."
   :group 'embrace)
 
