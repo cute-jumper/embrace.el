@@ -75,6 +75,17 @@ doesn't work on many custom pairs?)
 
    [[https://github.com/cute-jumper/evil-embrace.el/blob/master/screencasts/evil-embrace.gif]]
 
+   And we have a friendly help system (Yes, it is based on some simplified code
+   from [[https://github.com/justbur/emacs-which-key][which-key]]):
+
+   Help to select a semantic unit:
+
+   [[./screencasts/help_unit.png]]
+
+   Help to delete a pair:
+
+   [[./screencasts/help.png]]
+
 
 ** =embrace-change= and =embrace-delete=
    These two commands can change and delete the surround pair respectively. For
@@ -142,7 +153,9 @@ doesn't work on many custom pairs?)
    :        (embrace-add-pair ?e "\\begin{" "}")))
 
    If you want add something like the =t= key for the tag, you can look at the
-   function =embrace-add-pair-regexp= in the source code.
+   function =embrace-add-pair-regexp= in the source code, and if you're planning
+   to use =embrace-add-pair-regexp=, you should also use =embrace-build-help= to
+   build the user-friendly help message.
 
    Note that if you're using =embrace-add-pair= to add an existing key, then it
    will replace the old one.
