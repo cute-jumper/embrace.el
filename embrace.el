@@ -305,10 +305,17 @@
 ;;    +    +                 +
 ;;    k    `@@html:<kbd>@@'  `@@html:</kbd>@@'
 
+;;   `ruby-mode and enh-ruby-mode':
+;;    Key  Left  Right
+;;   ------------------
+;;    #    #{     }
+;;    d    do     end
+
 ;;   To use them:
 ;;   ,----
 ;;   | (add-hook 'LaTeX-mode-hook 'embrace-LaTeX-mode-hook)
 ;;   | (add-hook 'org-mode-hook 'embrace-org-mode-hook)
+;;   | (add-hook 'ruby-mode-hook 'embrace-ruby-mode-hook) ;; or enh-ruby-mode-hook
 ;;   `----
 
 ;;   The code for the two hooks above (which are defined in `embrace.el'):
@@ -905,6 +912,13 @@
     (embrace-add-pair (car lst) (cadr lst) (cddr lst)))
   (embrace-add-pair-regexp ?l "#\\+BEGIN_.*" "#\\+END_.*" 'embrace-with-org-block
                            (embrace-build-help "#+BEGIN_*" "#+END") t))
+
+
+;;;###autoload
+(defun embrace-ruby-mode-hook ()
+  (dolist (lst '((?# "#{" "}")
+                 (?d "do" "end")))
+    (embrace-add-pair (car lst) (cadr lst) (caddr lst))))
 
 (provide 'embrace)
 ;;; embrace.el ends here
