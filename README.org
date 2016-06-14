@@ -1,5 +1,8 @@
 #+TITLE: embrace.el
 
+[[http://melpa.org/#/embrace][file:http://melpa.org/packages/embrace-badge.svg]]
+[[http://stable.melpa.org/#/embrace][file:http://stable.melpa.org/packages/embrace-badge.svg]]
+
 Add/Change/Delete pairs based on [[https://github.com/magnars/expand-region.el][expand-region]].
 
 For =evil-surround= integration, see [[https://github.com/cute-jumper/evil-embrace.el][evil-embrace]].
