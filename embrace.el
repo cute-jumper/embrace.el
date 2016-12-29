@@ -918,7 +918,7 @@
 (defun embrace-ruby-mode-hook ()
   (dolist (lst '((?# "#{" "}")
                  (?d "do" "end")))
-    (embrace-add-pair (car lst) (cadr lst) (caddr lst))))
+    (embrace-add-pair (car lst) (cadr lst) (cl-caddr lst))))
 
 (provide 'embrace)
 ;;; embrace.el ends here
