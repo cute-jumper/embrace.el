@@ -736,12 +736,12 @@
                     (not (and (looking-at open)
                               (save-excursion
                                 (goto-char (region-end))
-                                (looking-back close)))))
+                                (looking-back close nil)))))
           (er/expand-region 1))
         (when (not (and (looking-at open)
                         (save-excursion
                           (goto-char (region-end))
-                          (looking-back close))))
+                          (looking-back close nil))))
           (setq mark-active nil))
         (when (use-region-p)
           (cons (region-beginning) (region-end)))))))
@@ -785,7 +785,7 @@
                (insert "\n"))
           (goto-char (overlay-end overlay))
           (and auto-newline
-               (not (looking-back "\n[[:space:]]*"))
+               (not (looking-back "\n[[:space:]]*" nil))
                (insert "\n"))
           (insert close))
       (delete-overlay overlay))))
@@ -810,10 +810,10 @@
                  (looking-at-p "[[:space:]]*\n")
                  (zap-to-char 1 ?\n))
             (goto-char (overlay-end overlay))
-            (when (looking-back close)
+            (when (looking-back close nil)
               (backward-delete-char (string-width (match-string 0))))
             (and auto-newline
-                 (looking-back "\n[[:space:]]*")
+                 (looking-back "\n[[:space:]]*" nil)
                  (delete-region (match-beginning 0) (point))))
           (when change-p overlay))
       (unless change-p (delete-overlay overlay)))))
