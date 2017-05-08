@@ -893,24 +893,50 @@
                  (?* "\\textbf{" . "}")))
     (embrace-add-pair (car lst) (cadr lst) (cddr lst))))
 
+(defvar embrace-org-src-block-modes nil
+  "Completions for `org-mode' source block.")
+
+(defun embrace--get-org-src-block-modes ()
+  (or embrace-org-src-block-modes
+      (setq embrace-org-src-block-modes
+            (delete nil
+                    (cl-remove-duplicates
+                     (append
+                      (mapcar (lambda (x) (car (last x)))
+                              (cdr (plist-get
+                                    (cdr (get 'org-babel-load-languages 'custom-type))
+                                    :key-type)))
+                      (mapcar (lambda (x)
+                                (let ((mode (cdr x)))
+                                  (and (not (consp mode))
+                                       (setq mode (format "%s" mode))
+                                       (string-match "-mode$" mode)
+                                       (intern (substring mode 0 (match-beginning 0))))))
+                              auto-mode-alist)))))))
+
 (defun embrace-with-org-block ()
   (let ((block-type (completing-read
                      "Org block type: "
-                     '(ascii beamer center comment example html
-                             justifyleft justifyright latex quote
-                             src texinfo verse))))
-    (if (string= block-type "src")
-        (cons
-         (concat (format "#+BEGIN_SRC %s"
-                         (completing-read "Language: "
-                                          (mapcar #'car org-babel-load-languages)))
-                 (let ((args (read-string "Arguments: ")))
-                   (unless (string= args "")
-                     (format " %s" args))))
-         "#+END_SRC")
-      (setq block-type (upcase block-type))
-      (cons (format "#+BEGIN_%s" block-type)
-            (format "#+END_%s" block-type)))))
+                     '(center comment example export justifyleft justifyright
+                              quote src verse))))
+    (cond ((string= block-type "src")
+           (cons
+            (concat (format "#+BEGIN_SRC %s"
+                            (completing-read "Language: "
+                                             (embrace--get-org-src-block-modes)))
+                    (let ((args (read-string "Arguments: ")))
+                      (unless (string= args "")
+                        (format " %s" args))))
+            "#+END_SRC"))
+          ((string= block-type "export")
+           (cons (format "#+BEGIN_EXPORT %s"
+                         (completing-read "Format: "
+                                          '(ascii beamer html latex texinfo)))
+                 "#+END_EXPORT"))
+          (t
+           (setq block-type (upcase block-type))
+           (cons (format "#+BEGIN_%s" block-type)
+                 (format "#+END_%s" block-type))))))
 
 ;;;###autoload
 (defun embrace-org-mode-hook ()
