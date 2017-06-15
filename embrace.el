@@ -715,12 +715,12 @@
 ;; funcions & commands ;;
 ;; ------------------- ;;
 (defun embrace-with-tag ()
-  (let* ((input (read-string "Tag: "))
-         (_ (string-match "\\([0-9a-z-]+\\)\\(.*?\\)[>]*$" input))
-         (tag  (match-string 1 input))
-         (rest (match-string 2 input)))
-    (cons (format "<%s%s>" (or tag "") (or rest ""))
-          (format "</%s>" (or tag "")))))
+  (let ((input (read-string "Tag: ")) tag rest)
+    (when (string-match "\\([0-9a-z-]+\\)\\(.*?\\)[>]*$" input)
+      (setq tag (match-string 1 input))
+      (setq rest (match-string 2 input))
+      (cons (format "<%s%s>" (or tag "") (or rest ""))
+            (format "</%s>" (or tag ""))))))
 
 (defun embrace-with-function ()
   (let ((fname (read-string "Function: ")))
