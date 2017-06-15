@@ -879,7 +879,7 @@
          ((eq char ?d)
           (call-interactively 'embrace-delete))
          (t
-          (error "Unknow command"))))
+          (error "Unknown key"))))
     (embrace--hide-help-buffer)))
 
 ;; -------- ;;
