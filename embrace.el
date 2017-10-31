@@ -709,7 +709,12 @@
 
 (defun embrace--hide-help-buffer ()
   (and (buffer-live-p embrace--help-buffer)
-       (quit-windows-on embrace--help-buffer)))
+       (let ((win (get-buffer-window embrace--help-buffer)))
+         ;; Set `quit-restore' window parameter to fix evil-embrace/#5
+         (set-window-parameter
+          win 'quit-restore
+          (list 'window 'window (selected-window) embrace--help-buffer))
+         (quit-windows-on embrace--help-buffer))))
 
 ;; ------------------- ;;
 ;; funcions & commands ;;
