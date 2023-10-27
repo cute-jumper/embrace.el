@@ -512,7 +512,9 @@
   (embrace-add-pair-regexp ?t "<[^>]*?>" "</[^>]*?>" 'embrace-with-tag
                            (embrace-build-help "<tag attr>" "</tag>"))
   (embrace-add-pair-regexp ?f "\\(\\w\\|\\s_\\)+?(" ")" 'embrace-with-function
-                           (embrace-build-help "function(" ")")))
+                           (embrace-build-help "function(" ")"))
+  (embrace-add-pair-regexp ?\C-f "(\\([^ ]+\\) " ")" 'embrace-with-prefix-function
+                    (embrace-build-help "(function " ")")))
 
 (embrace--setup-defaults)
 (make-variable-buffer-local 'embrace--pairs-list)
@@ -730,6 +732,10 @@
 (defun embrace-with-function ()
   (let ((fname (read-string "Function: ")))
     (cons (format "%s(" (or fname "")) ")")))
+
+(defun embrace-with-prefix-function ()
+  (let ((fname (read-string "Function: ")))
+    (cons (format "(%s " (or fname "")) ")")))
 
 (defun embrace--expand-region-research (open close)
   (cl-letf (((symbol-function 'message) (lambda (&rest _) nil)))
